@@ -1,0 +1,85 @@
+// Based on the geb build.gradle from Geb Manual:
+// https://github.com/geb/geb-example-gradle/blob/master/build.gradle
+plugins {
+    id "idea"
+    id "groovy"
+    id "com.energizedwork.webdriver-binaries" version "1.4"
+    id "com.energizedwork.idea-base" version "1.2"
+}
+
+ext {
+    drivers = ["firefox", "chrome", "chromeHeadless", "ie"]
+
+    ext {
+        groovyVersion = '2.4.12'
+        gebVersion = '2.0'
+        seleniumVersion = '3.6.0'
+        chromeDriverVersion = '2.36'
+        geckoDriverVersion = '0.18.0'
+        ieDriverVersion = '3.8.0'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // If using Spock, need to depend on geb-spock
+    testCompile "org.gebish:geb-spock:$gebVersion"
+    testCompile("org.spockframework:spock-core:1.1-groovy-2.4") {
+        exclude group: "org.codehaus.groovy"
+    }
+    testCompile "org.codehaus.groovy:groovy-all:$groovyVersion"
+
+    // If using JUnit, need to depend on geb-junit (3 or 4)
+    testCompile "org.gebish:geb-junit4:$gebVersion"
+
+    compile "org.seleniumhq.selenium:selenium-support:$seleniumVersion"
+
+    //testCompile group: 'org.apache.commons', name: 'commons-lang3', version:'3.5'
+
+    // Drivers
+    testCompile "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
+    testCompile "org.seleniumhq.selenium:selenium-firefox-driver:$seleniumVersion"
+    testCompile "org.seleniumhq.selenium:selenium-ie-driver:$seleniumVersion"
+}
+
+webdriverBinaries {
+    chromedriver chromeDriverVersion
+    geckodriver geckoDriverVersion
+    iedriverserver {
+        version = ieDriverVersion
+        architecture = 'X86'
+    }    
+}
+
+drivers.each { driver ->
+    task "${driver}Test"(type: Test) {
+        group JavaBasePlugin.VERIFICATION_GROUP
+
+        outputs.upToDateWhen { false } 
+
+        systemProperty "geb.build.reportsDir", reporting.file("geb/$name")
+        systemProperty "geb.env", driver
+        systemProperties System.properties
+    }
+}
+
+test {
+    dependsOn drivers.collect { tasks["${it}Test"] }
+    enabled = false
+}
+
+tasks.withType(Test) {
+    maxHeapSize = "1g"
+    jvmArgs '-XX:MaxMetaspaceSize=128m'
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+tasks.withType(GroovyCompile) {
+    groovyOptions.forkOptions.memoryMaximumSize = '256m'
+}
+
