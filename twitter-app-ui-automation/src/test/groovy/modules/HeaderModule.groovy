@@ -24,7 +24,7 @@ class HeaderModule extends Module {
         navigationExtras (required: false) {$(".js-topbar .global-nav .nav-extras")}
         navigationRightActions (required: false) { navigationExtras.find('.right-actions')}
         currentUserDropdown (required: false, wait: true) { navigationRightActions.find('#user-dropdown')}
-        logoutButton (required: false, wait: true) { currentUserDropdown.find('.js-signout-button')}
+        logoutButton (required: false, wait: true) { currentUserDropdown.find('.js-logout-button')}
     }
 
     def clickOnLogout(){
